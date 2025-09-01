@@ -1,48 +1,96 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/ui/icons'
 
-// Mock data - replace with actual data fetching
-const mockPolls = [
-  {
-    id: '1',
-    question: 'What is your favorite programming language?',
-    description: 'Choose the language you enjoy working with the most',
-    options: ['JavaScript', 'Python', 'TypeScript', 'Rust', 'Go'],
-    totalVotes: 156,
-    createdAt: '2024-01-15',
-    isActive: true,
-    category: 'Technology'
-  },
-  {
-    id: '2',
-    question: 'Which framework should we use for the next project?',
-    description: 'Help us decide on the best framework for our team',
-    options: ['React', 'Vue', 'Angular', 'Svelte'],
-    totalVotes: 89,
-    createdAt: '2024-01-14',
-    isActive: true,
-    category: 'Development'
-  },
-  {
-    id: '3',
-    question: 'What should we have for lunch today?',
-    description: 'Team lunch decision for Friday',
-    options: ['Pizza', 'Sushi', 'Burger', 'Salad'],
-    totalVotes: 23,
-    createdAt: '2024-01-13',
-    isActive: false,
-    category: 'Team'
+interface PollOption {
+  id: string
+  text: string
+  votes: number
+}
+
+interface Poll {
+  id: string
+  question: string
+  description?: string
+  options: PollOption[]
+  totalVotes: number
+  createdAt: string
+  isActive: boolean
+  category: string
+  author: {
+    id: string
+    name: string
+    email: string
   }
-]
+}
 
 export function PollsList() {
+  const [polls, setPolls] = useState<Poll[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    async function fetchPolls() {
+      try {
+        const response = await fetch('/api/polls')
+        if (!response.ok) {
+          throw new Error('Failed to fetch polls')
+        }
+        const data = await response.json()
+        setPolls(data.polls)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch polls')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPolls()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="animate-pulse">
+            <CardHeader>
+              <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="h-3 bg-gray-200 rounded"></div>
+                <div className="h-3 bg-gray-200 rounded"></div>
+                <div className="h-3 bg-gray-200 rounded"></div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-600">{error}</p>
+        <Button 
+          variant="outline" 
+          onClick={() => window.location.reload()}
+          className="mt-4"
+        >
+          Try Again
+        </Button>
+      </div>
+    )
+  }
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {mockPolls.map((poll) => (
+      {polls.map((poll) => (
         <Card key={poll.id} className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <div className="flex items-start justify-between">
@@ -67,7 +115,7 @@ export function PollsList() {
             <div className="space-y-2">
               {poll.options.slice(0, 3).map((option, index) => (
                 <div key={index} className="text-sm text-muted-foreground">
-                  • {option}
+                  • {option.text}
                 </div>
               ))}
               {poll.options.length > 3 && (
@@ -77,12 +125,16 @@ export function PollsList() {
               )}
             </div>
             <div className="mt-4 flex gap-2">
-              <Button size="sm" className="flex-1">
-                <Icons.vote className="mr-2 h-4 w-4" />
-                Vote
+              <Button size="sm" className="flex-1" asChild>
+                <a href={`/polls/${poll.id}`}>
+                  <Icons.vote className="mr-2 h-4 w-4" />
+                  Vote
+                </a>
               </Button>
-              <Button size="sm" variant="outline">
-                <Icons.eye className="h-4 w-4" />
+              <Button size="sm" variant="outline" asChild>
+                <a href={`/polls/${poll.id}`}>
+                  <Icons.eye className="h-4 w-4" />
+                </a>
               </Button>
             </div>
           </CardContent>

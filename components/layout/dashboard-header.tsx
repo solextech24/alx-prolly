@@ -1,66 +1,104 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Icons } from '@/components/ui/icons'
 
+interface User {
+  id: string
+  email: string
+  name: string
+  avatar?: string | null
+}
+
 export function DashboardHeader() {
-  // Mock user data - replace with actual user context
-  const user = {
-    name: 'John Doe',
-    email: 'john@example.com',
-    avatar: '/avatars/john.jpg'
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
+
+  useEffect(() => {
+    // Get demo user from localStorage
+    const demoUser = localStorage.getItem('demo-user')
+    if (demoUser) {
+      setUser(JSON.parse(demoUser))
+    }
+    setIsLoading(false)
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('demo-user')
+    setUser(null)
+    router.push('/polls')
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-between space-y-2">
+        <div>
+          <div className="h-8 w-64 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-4 w-48 bg-gray-200 rounded animate-pulse mt-2"></div>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="flex items-center justify-between space-y-2">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Welcome back, {user.name}!</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          Welcome back, {user?.name || 'User'}!
+        </h2>
         <p className="text-muted-foreground">
-          Here's what's happening with your polls today.
+          Here&apos;s what&apos;s happening with your polls today.
         </p>
       </div>
       <div className="flex items-center space-x-2">
-        <Button variant="outline" size="sm">
-          <Icons.plus className="mr-2 h-4 w-4" />
-          Create Poll
+        <Button variant="outline" size="sm" asChild>
+          <a href="/polls/create">
+            <Icons.plus className="mr-2 h-4 w-4" />
+            Create Poll
+          </a>
         </Button>
         
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end" forceMount>
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{user.name}</p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  {user.email}
-                </p>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Icons.user className="mr-2 h-4 w-4" />
-              <span>Profile</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Icons.settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Icons.logOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={user.avatar || undefined} alt={user.name} />
+                  <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">{user.name}</p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {user.email}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <Icons.user className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Icons.settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout}>
+                <Icons.logOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </div>
   )

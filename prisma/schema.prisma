@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  polls Poll[]
+  votes Vote[]
+
+  @@map("users")
+}
+
+model Poll {
+  id          String   @id @default(cuid())
+  question    String
+  description String?
+  isActive    Boolean  @default(true)
+  category    String
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  options  PollOption[]
+  votes    Vote[]
+
+  @@map("polls")
+}
+
+model PollOption {
+  id        String @id @default(cuid())
+  text      String
+  pollId    String
+  poll      Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes     Vote[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("poll_options")
+}
+
+model Vote {
+  id         String @id @default(cuid())
+  pollId     String
+  optionId   String
+  userId     String
+  createdAt  DateTime @default(now())
+
+  // Relations
+  poll   Poll        @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option PollOption  @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Ensure user can only vote once per poll
+  @@unique([pollId, userId])
+  @@map("votes")
+}

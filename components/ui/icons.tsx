@@ -16,7 +16,7 @@ import {
   Calendar,
   Clock,
   X,
-  Spinner
+  Loader2
 } from 'lucide-react'
 
 export const Icons = {
@@ -36,6 +36,6 @@ export const Icons = {
   calendar: Calendar,
   clock: Clock,
   x: X,
-  spinner: Spinner,
+  spinner: Loader2,
   // Add more icons as needed
 }

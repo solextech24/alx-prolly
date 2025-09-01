@@ -58,26 +58,91 @@ alx-polly/
 
 - Node.js 18+ 
 - npm or yarn
+- PostgreSQL (optional, demo mode works without database)
 
 ### Installation
 
-1. Clone the repository:
+1. **Clone the repository:**
 ```bash
 git clone <repository-url>
 cd alx-polly
 ```
 
-2. Install dependencies:
+2. **Install dependencies:**
 ```bash
 npm install
 ```
 
-3. Run the development server:
+3. **Set up environment variables:**
+```bash
+# Copy the environment template
+cp env.example .env.local
+
+# Edit .env.local with your actual values
+# For demo mode, you can use the default values
+```
+
+4. **Generate Prisma client (if using database):**
+```bash
+npm run db:generate
+```
+
+5. **Run the development server:**
+5. **Run the development server:**
 ```bash
 npm run dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+6. **Open your browser:**
+Visit [http://localhost:3000](http://localhost:3000)
+
+### 🔑 Demo Authentication
+
+The app includes a demo authentication system for testing:
+
+- **Login:** Use any email/password combination (e.g., `test@example.com` / `password123`)
+- **Features:** Browse polls, vote, create polls, access dashboard
+- **Data:** All data is stored temporarily (mock API responses)
+
+### 🗄️ Database Setup (Optional)
+
+For full functionality with persistent data:
+
+1. **Set up PostgreSQL database**
+2. **Update `DATABASE_URL` in `.env.local`**
+3. **Run database migrations:**
+```bash
+npm run db:push
+npm run db:seed
+```
+
+## 🔒 Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | No* | PostgreSQL connection string |
+| `NEXTAUTH_SECRET` | Yes | Secret for NextAuth (generate with `openssl rand -base64 32`) |
+| `NEXTAUTH_URL` | Yes | Your app's URL |
+| `NEXT_PUBLIC_SUPABASE_URL` | No | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | No | Supabase anonymous key |
+
+*Not required for demo mode
+
+## 📱 Features
+
+### ✅ Currently Working
+- **Demo Authentication** - Login/logout with any credentials
+- **Poll Browsing** - View all available polls
+- **Interactive Voting** - Vote on polls with real-time progress
+- **Poll Creation** - Create polls with multiple options
+- **User Dashboard** - Personalized dashboard with quick actions
+- **Responsive Design** - Works on all screen sizes
+
+### 🚧 Coming Soon
+- **Real Database Integration** - Persistent data storage
+- **User Management** - Proper user registration and profiles
+- **Real-time Updates** - Live poll results
+- **Advanced Analytics** - Detailed poll insights
 
 ## 📁 Component Overview
 
