@@ -40,6 +40,9 @@ export default function PollPage({ params }: { params: Promise<{ id: string }> }
   const [error, setError] = useState('')
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [voting, setVoting] = useState(false)
+  const [hasVoted, setHasVoted] = useState(false)
+  const [voteSuccess, setVoteSuccess] = useState(false)
+  const [userVote, setUserVote] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchPoll() {
@@ -75,7 +78,7 @@ export default function PollPage({ params }: { params: Promise<{ id: string }> }
         },
         body: JSON.stringify({
           optionId: selectedOption,
-          userId: 'temp-user-id' // In real app, get from auth
+          userId: 'user-1' // Using demo user from our sample data
         }),
       })
 

@@ -2,10 +2,95 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 // Initialize Supabase client with service role for server-side operations
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+let supabase: any = null
+
+try {
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    )
+  }
+} catch (error) {
+  console.warn('Supabase not configured, using mock data')
+}
+
+// Mock poll data for when Supabase is not configured
+const getMockPoll = (id: string) => {
+  const mockPolls = [
+    {
+      id: 'poll-1',
+      question: 'What is your favorite programming language?',
+      description: 'Choose your preferred programming language for web development',
+      category: 'Technology',
+      isActive: true,
+      expiresAt: null,
+      createdAt: '2024-01-15T10:30:00Z',
+      updatedAt: '2024-01-15T10:30:00Z',
+      totalVotes: 156,
+      options: [
+        { id: 'option-1', text: 'JavaScript', votes: 45, percentage: 28.8 },
+        { id: 'option-2', text: 'Python', votes: 38, percentage: 24.4 },
+        { id: 'option-3', text: 'TypeScript', votes: 42, percentage: 26.9 },
+        { id: 'option-4', text: 'Go', votes: 13, percentage: 8.3 },
+        { id: 'option-5', text: 'Rust', votes: 18, percentage: 11.5 }
+      ],
+      author: {
+        id: 'user-1',
+        name: 'Alice Johnson',
+        email: 'alice@example.com',
+        avatar: null
+      }
+    },
+    {
+      id: 'poll-2',
+      question: 'Best time for team meetings?',
+      description: 'Help us decide the optimal time for our weekly team meetings',
+      category: 'Work',
+      isActive: true,
+      expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+      createdAt: '2024-01-14T10:30:00Z',
+      updatedAt: '2024-01-14T10:30:00Z',
+      totalVotes: 89,
+      options: [
+        { id: 'option-5', text: '9:00 AM', votes: 25, percentage: 28.1 },
+        { id: 'option-6', text: '2:00 PM', votes: 34, percentage: 38.2 },
+        { id: 'option-7', text: '4:00 PM', votes: 30, percentage: 33.7 }
+      ],
+      author: {
+        id: 'user-2',
+        name: 'Bob Smith',
+        email: 'bob@example.com',
+        avatar: null
+      }
+    },
+    {
+      id: 'poll-3',
+      question: 'Preferred project management tool?',
+      description: 'Vote for the tool you think would work best for our team',
+      category: 'Productivity',
+      isActive: true,
+      expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+      createdAt: '2024-01-13T10:30:00Z',
+      updatedAt: '2024-01-13T10:30:00Z',
+      totalVotes: 67,
+      options: [
+        { id: 'option-8', text: 'Trello', votes: 15, percentage: 22.4 },
+        { id: 'option-9', text: 'Asana', votes: 12, percentage: 17.9 },
+        { id: 'option-10', text: 'Notion', votes: 25, percentage: 37.3 },
+        { id: 'option-11', text: 'Linear', votes: 15, percentage: 22.4 }
+      ],
+      author: {
+        id: 'user-1',
+        name: 'Alice Johnson',
+        email: 'alice@example.com',
+        avatar: null
+      }
+    }
+  ]
+  
+  return mockPolls.find(poll => poll.id === id)
+}
 
 export async function GET(
   request: NextRequest,
@@ -14,6 +99,15 @@ export async function GET(
   try {
     const resolvedParams = await params
     const pollId = resolvedParams.id
+
+    // If Supabase is not configured, return mock data
+    if (!supabase) {
+      const mockPoll = getMockPoll(pollId)
+      if (!mockPoll) {
+        return NextResponse.json({ error: 'Poll not found' }, { status: 404 })
+      }
+      return NextResponse.json({ poll: mockPoll })
+    }
 
     // Fetch poll with options and votes from Supabase
     const { data: poll, error: pollError } = await supabase
@@ -48,6 +142,11 @@ export async function GET(
 
     if (pollError) {
       console.error('Error fetching poll:', pollError)
+      // Try to fallback to mock data
+      const mockPoll = getMockPoll(pollId)
+      if (mockPoll) {
+        return NextResponse.json({ poll: mockPoll })
+      }
       return NextResponse.json({ error: 'Poll not found' }, { status: 404 })
     }
 
@@ -92,6 +191,12 @@ export async function GET(
     return NextResponse.json({ poll: pollWithStats })
   } catch (error) {
     console.error('Error fetching poll:', error)
+    // Try to fallback to mock data
+    const resolvedParams = await params
+    const mockPoll = getMockPoll(resolvedParams.id)
+    if (mockPoll) {
+      return NextResponse.json({ poll: mockPoll })
+    }
     return NextResponse.json(
       { error: 'Failed to fetch poll' },
       { status: 500 }
@@ -115,6 +220,27 @@ export async function POST(
         { error: 'Option ID and User ID are required' },
         { status: 400 }
       )
+    }
+
+    // If Supabase is not configured, return mock response
+    if (!supabase) {
+      const mockPoll = getMockPoll(pollId)
+      if (!mockPoll) {
+        return NextResponse.json({ error: 'Poll not found' }, { status: 404 })
+      }
+      
+      const mockVote = {
+        id: `vote-${Date.now()}`,
+        pollId,
+        optionId,
+        userId,
+        createdAt: new Date().toISOString()
+      }
+      
+      return NextResponse.json({ 
+        vote: mockVote,
+        message: 'Vote created successfully (demo mode)' 
+      }, { status: 201 })
     }
 
     // Check if poll exists and is active
