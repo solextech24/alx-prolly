@@ -1,36 +1,169 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ALX Polling App
 
-## Getting Started
+A modern, feature-rich polling application built with Next.js 15, TypeScript, and Shadcn UI components.
 
-First, run the development server:
+## 🚀 Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **User Authentication**: Login and registration system
+- **Poll Management**: Create, view, and manage polls
+- **Voting System**: Interactive voting with real-time results
+- **Dashboard**: Comprehensive overview of user's polls and analytics
+- **Responsive Design**: Modern UI that works on all devices
+- **TypeScript**: Full type safety throughout the application
+
+## 🏗️ Project Structure
+
+```
+alx-polly/
+├── app/                          # Next.js app directory
+│   ├── (auth)/                  # Authentication route group
+│   │   ├── login/               # Login page
+│   │   └── register/            # Registration page
+│   ├── (dashboard)/             # Dashboard route group
+│   │   └── dashboard/           # User dashboard
+│   ├── polls/                   # Polls routes
+│   │   ├── page.tsx            # Polls listing page
+│   │   ├── create/             # Create new poll
+│   │   └── [id]/               # Individual poll view
+│   ├── globals.css             # Global styles
+│   ├── layout.tsx              # Root layout
+│   └── page.tsx                # Home page
+├── components/                  # Reusable components
+│   ├── ui/                     # Shadcn UI components
+│   ├── forms/                  # Form components
+│   ├── polls/                  # Poll-related components
+│   └── layout/                 # Layout components
+├── lib/                        # Utility libraries
+│   ├── auth/                   # Authentication utilities
+│   ├── db/                     # Database utilities
+│   ├── types/                  # TypeScript type definitions
+│   └── utils.ts                # General utilities
+├── public/                     # Static assets
+└── package.json                # Dependencies and scripts
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS v4
+- **UI Components**: Shadcn UI
+- **Icons**: Lucide React
+- **Authentication**: Placeholder (ready for implementation)
+- **Database**: Placeholder (ready for implementation)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚀 Getting Started
 
-## Learn More
+### Prerequisites
 
-To learn more about Next.js, take a look at the following resources:
+- Node.js 18+ 
+- npm or yarn
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Installation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd alx-polly
+```
 
-## Deploy on Vercel
+2. Install dependencies:
+```bash
+npm install
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. Run the development server:
+```bash
+npm run dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## 📁 Component Overview
+
+### Authentication Components
+- `LoginForm`: User login form with validation
+- `RegisterForm`: User registration form
+- `auth-utils.ts`: Authentication utility functions
+
+### Poll Components
+- `PollsList`: Grid display of available polls
+- `PollsFilter`: Search and filter functionality
+- `PollView`: Individual poll display with voting
+- `PollResults`: Detailed poll results and analytics
+- `CreatePollForm`: Form for creating new polls
+
+### Layout Components
+- `DashboardHeader`: Dashboard header with user menu
+- `QuickActions`: Quick action cards for common tasks
+- `PollsOverview`: Dashboard overview with statistics
+
+### UI Components
+All Shadcn UI components are available in `components/ui/`:
+- Button, Card, Input, Label, Textarea
+- Select, Dialog, Badge, Avatar
+- Dropdown Menu, Form components
+
+## 🔧 Configuration
+
+### Shadcn UI
+The project is configured with Shadcn UI components. To add new components:
+
+```bash
+npx shadcn@latest add <component-name>
+```
+
+### Tailwind CSS
+Tailwind CSS v4 is configured with the project. Custom styles can be added to `app/globals.css`.
+
+## 🚧 Implementation Status
+
+### ✅ Completed
+- Project structure and routing
+- Component scaffolding with Shadcn UI
+- TypeScript type definitions
+- Mock data and placeholder functions
+- Responsive design and modern UI
+
+### 🚧 In Progress
+- Authentication system implementation
+- Database integration
+- Real-time voting functionality
+- User management features
+
+### 📋 Next Steps
+1. Implement authentication system (NextAuth.js, Clerk, or custom)
+2. Set up database (PostgreSQL, MongoDB, or Supabase)
+3. Add real-time features with WebSockets
+4. Implement user roles and permissions
+5. Add analytics and reporting features
+6. Set up testing framework
+7. Deploy to production
+
+## 🎨 Customization
+
+### Adding New Poll Types
+1. Extend the `Poll` interface in `lib/types/index.ts`
+2. Create new components in `components/polls/`
+3. Update the database utilities in `lib/db/db-utils.ts`
+
+### Styling
+- Modify `app/globals.css` for global styles
+- Use Tailwind CSS classes for component-specific styling
+- Customize Shadcn UI theme in `components.json`
+
+## 📝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🤝 Support
+
+For questions or support, please open an issue in the repository.

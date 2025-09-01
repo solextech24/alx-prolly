@@ -1,0 +1,41 @@
+import {
+  LucideProps,
+  User,
+  Settings,
+  LogOut,
+  Plus,
+  BarChart,
+  Activity,
+  List,
+  TrendingUp,
+  Search,
+  Filter,
+  Vote,
+  Eye,
+  Users,
+  Calendar,
+  Clock,
+  X,
+  Spinner
+} from 'lucide-react'
+
+export const Icons = {
+  user: User,
+  settings: Settings,
+  logOut: LogOut,
+  plus: Plus,
+  barChart: BarChart,
+  activity: Activity,
+  list: List,
+  trendingUp: TrendingUp,
+  search: Search,
+  filter: Filter,
+  vote: Vote,
+  eye: Eye,
+  users: Users,
+  calendar: Calendar,
+  clock: Clock,
+  x: X,
+  spinner: Spinner,
+  // Add more icons as needed
+}
