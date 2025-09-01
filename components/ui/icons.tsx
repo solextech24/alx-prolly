@@ -16,7 +16,9 @@ import {
   Calendar,
   Clock,
   X,
-  Loader2
+  Loader2,
+  CheckCircle,
+  Trash2
 } from 'lucide-react'
 
 export const Icons = {
@@ -37,5 +39,7 @@ export const Icons = {
   clock: Clock,
   x: X,
   spinner: Loader2,
+  checkCircle: CheckCircle,
+  trash: Trash2,
   // Add more icons as needed
 }

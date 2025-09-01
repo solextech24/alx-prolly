@@ -187,3 +187,5 @@ After setting up authentication:
 - [Next.js App Router](https://nextjs.org/docs/app)
 - [Tailwind CSS](https://tailwindcss.com/docs)
 - [Shadcn UI](https://ui.shadcn.com/)
+
+
