@@ -44,7 +44,7 @@ const DEFAULT_CATEGORIES = [
 ]
 
 function isBranchPoll(p: Poll | BranchPoll): p is BranchPoll {
-  return typeof (p as BranchPoll).author?.email === 'string' && typeof (p as any).updatedAt === 'undefined'
+  return 'author' in p && typeof p.author?.email === 'string'
 }
 
 export function EditPollForm({ poll, onSubmit, categories = DEFAULT_CATEGORIES }: EditPollFormProps) {
@@ -58,7 +58,7 @@ export function EditPollForm({ poll, onSubmit, categories = DEFAULT_CATEGORIES }
     resolver: zodResolver(pollSchema),
     defaultValues: {
       question: poll.question || '',
-      description: (poll as any).description || '',
+      description: 'description' in poll ? poll.description || '' : '',
       category: poll.category || categories[0] || 'General',
       options: initialOptionTexts.length >= 2 ? initialOptionTexts : ['', '']
     }

@@ -19,26 +19,33 @@ export function PollView({ pollId }: PollViewProps) {
   const [hasVoted, setHasVoted] = useState(false)
 
   useEffect(() => {
-    let isMounted = true
-    async function fetchPoll() {
+    const controller = new AbortController()
+    setLoading(true)
+    setError('')
+    setSelectedOption(null)
+    setHasVoted(false)
+
+    ;(async () => {
       try {
-        setLoading(true)
-        const res = await fetch(`/api/polls/${pollId}`)
+        const res = await fetch(`/api/polls/${pollId}`, {
+          signal: controller.signal,
+          cache: 'no-store',
+        })
         if (!res.ok) {
-          throw new Error('Failed to fetch poll')
+          throw new Error(`Failed to fetch poll (${res.status})`)
         }
         const data = await res.json()
-        if (isMounted) setPoll(data.poll)
-      } catch (e) {
-        if (isMounted) setError(e instanceof Error ? e.message : 'Failed to fetch poll')
+        setPoll(data.poll)
+      } catch (e: unknown) {
+        if ((e as any)?.name === 'AbortError') return
+        setError(e instanceof Error ? e.message : 'Failed to fetch poll')
       } finally {
-        if (isMounted) setLoading(false)
+        setLoading(false)
       }
-    }
-    fetchPoll()
-    return () => { isMounted = false }
-  }, [pollId])
+    })()
 
+    return () => controller.abort()
+  }, [pollId])
   const handleVote = () => {
     if (selectedOption) {
       setHasVoted(true)
