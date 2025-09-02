@@ -1,38 +1,43 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Icons } from '@/components/ui/icons'
+import type { BranchPoll } from '@/lib/types'
 
 interface PollViewProps {
   pollId: string
 }
 
-// Mock data - replace with actual data fetching
-const mockPoll = {
-  id: '1',
-  question: 'What is your favorite programming language?',
-  description: 'Choose the language you enjoy working with the most. This poll will help us understand the team\'s preferences for future projects.',
-  options: [
-    { id: '1', text: 'JavaScript', votes: 45, percentage: 28.8 },
-    { id: '2', text: 'Python', votes: 38, percentage: 24.4 },
-    { id: '3', text: 'TypeScript', votes: 32, percentage: 20.5 },
-    { id: '4', text: 'Rust', votes: 25, percentage: 16.0 },
-    { id: '5', text: 'Go', votes: 16, percentage: 10.3 }
-  ],
-  totalVotes: 156,
-  createdAt: '2024-01-15',
-  isActive: true,
-  category: 'Technology',
-  author: 'John Doe',
-  expiresAt: '2024-02-15'
-}
-
 export function PollView({ pollId }: PollViewProps) {
+  const [poll, setPoll] = useState<BranchPoll | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [hasVoted, setHasVoted] = useState(false)
+
+  useEffect(() => {
+    let isMounted = true
+    async function fetchPoll() {
+      try {
+        setLoading(true)
+        const res = await fetch(`/api/polls/${pollId}`)
+        if (!res.ok) {
+          throw new Error('Failed to fetch poll')
+        }
+        const data = await res.json()
+        if (isMounted) setPoll(data.poll)
+      } catch (e) {
+        if (isMounted) setError(e instanceof Error ? e.message : 'Failed to fetch poll')
+      } finally {
+        if (isMounted) setLoading(false)
+      }
+    }
+    fetchPoll()
+    return () => { isMounted = false }
+  }, [pollId])
 
   const handleVote = () => {
     if (selectedOption) {
@@ -52,45 +57,54 @@ export function PollView({ pollId }: PollViewProps) {
   return (
     <Card className="w-full">
       <CardHeader>
-        <div className="flex items-start justify-between">
+        {loading ? (
           <div className="space-y-2">
-            <CardTitle className="text-2xl">{mockPoll.question}</CardTitle>
-            <CardDescription className="text-base">
-              {mockPoll.description}
-            </CardDescription>
+            <div className="h-7 w-2/3 bg-gray-200 rounded animate-pulse" />
+            <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse" />
           </div>
-          <Badge variant={mockPoll.isActive ? 'default' : 'secondary'}>
-            {mockPoll.isActive ? 'Active' : 'Closed'}
-          </Badge>
-        </div>
-        
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Icons.user className="h-4 w-4" />
-            <span>By {mockPoll.author}</span>
+        ) : error ? (
+          <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+            {error}
           </div>
-          <div className="flex items-center gap-1">
-            <Icons.calendar className="h-4 w-4" />
-            <span>Created {formatDate(mockPoll.createdAt)}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Icons.users className="h-4 w-4" />
-            <span>{mockPoll.totalVotes} total votes</span>
-          </div>
-          {mockPoll.expiresAt && (
-            <div className="flex items-center gap-1">
-              <Icons.clock className="h-4 w-4" />
-              <span>Expires {formatDate(mockPoll.expiresAt)}</span>
+        ) : poll ? (
+          <div className="flex items-start justify-between">
+            <div className="space-y-2">
+              <CardTitle className="text-2xl">{poll.question}</CardTitle>
+              {poll.description && (
+                <CardDescription className="text-base">
+                  {poll.description}
+                </CardDescription>
+              )}
             </div>
-          )}
-        </div>
+            <Badge variant={poll.isActive ? 'default' : 'secondary'}>
+              {poll.isActive ? 'Active' : 'Closed'}
+            </Badge>
+          </div>
+        ) : null}
+        
+        {poll && (
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <Icons.user className="h-4 w-4" />
+              <span>By {poll.author.name}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Icons.calendar className="h-4 w-4" />
+              <span>Created {formatDate(poll.createdAt)}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Icons.users className="h-4 w-4" />
+              <span>{poll.totalVotes} total votes</span>
+            </div>
+          </div>
+        )}
       </CardHeader>
       
       <CardContent className="space-y-4">
         {!hasVoted ? (
           <>
             <div className="space-y-3">
-              {mockPoll.options.map((option) => (
+              {poll?.options.map((option) => (
                 <label
                   key={option.id}
                   className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
@@ -115,7 +129,7 @@ export function PollView({ pollId }: PollViewProps) {
             
             <Button 
               onClick={handleVote} 
-              disabled={!selectedOption}
+              disabled={!selectedOption || !poll}
               className="w-full"
             >
               <Icons.vote className="mr-2 h-4 w-4" />
@@ -124,16 +138,16 @@ export function PollView({ pollId }: PollViewProps) {
           </>
         ) : (
           <div className="space-y-3">
-            {mockPoll.options.map((option) => (
+            {poll?.options.map((option) => (
               <div key={option.id} className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>{option.text}</span>
-                  <span className="font-medium">{option.votes} votes ({option.percentage}%)</span>
+                  <span className="font-medium">{option.votes} votes</span>
                 </div>
                 <div className="w-full bg-secondary rounded-full h-2">
                   <div
                     className="bg-primary h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${option.percentage}%` }}
+                    style={{ width: `${poll.totalVotes > 0 ? Math.min((option.votes / poll.totalVotes) * 100, 100) : 0}%` }}
                   />
                 </div>
               </div>

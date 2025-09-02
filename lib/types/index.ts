@@ -69,6 +69,32 @@ export interface CreatePollData {
   expiresAt?: Date
 }
 
+// Branch-only types matching the mock API shape in app/api/polls/route.ts
+// Use these when consuming data returned by the branch mock endpoints.
+export interface BranchAuthor {
+  id: string
+  name: string
+  email: string
+}
+
+export interface BranchPollOption {
+  id: string
+  text: string
+  votes: number
+}
+
+export interface BranchPoll {
+  id: string
+  question: string
+  description?: string
+  options: BranchPollOption[]
+  totalVotes: number
+  createdAt: string // mock API returns date as string
+  isActive: boolean
+  category: string
+  author: BranchAuthor
+}
+
 export interface AuthCredentials {
   email: string
   password: string
