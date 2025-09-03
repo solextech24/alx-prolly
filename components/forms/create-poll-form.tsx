@@ -10,89 +10,89 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Icons } from '@/components/ui/icons'
 
-export function CreatePollForm() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const [options, setOptions] = useState(['', ''])
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
+        export function CreatePollForm() {
+        const router = useRouter()
+        const [isLoading, setIsLoading] = useState(false)
+        const [options, setOptions] = useState(['', ''])
+        const [error, setError] = useState('')
+        const [success, setSuccess] = useState(false)
 
-  const addOption = () => {
-    setOptions([...options, ''])
-  }
+        const addOption = () => {
+        setOptions([...options, ''])
+        }
 
-  const removeOption = (index: number) => {
-    if (options.length > 2) {
-      setOptions(options.filter((_, i) => i !== index))
-    }
-  }
+        const removeOption = (index: number) => {
+        if (options.length > 2) {
+        setOptions(options.filter((_, i) => i !== index))
+        }
+        }
 
-  const updateOption = (index: number, value: string) => {
-    const newOptions = [...options]
-    newOptions[index] = value
-    setOptions(newOptions)
-  }
+        const updateOption = (index: number, value: string) => {
+        const newOptions = [...options]
+        newOptions[index] = value
+        setOptions(newOptions)
+        }
 
-  async function onSubmit(event: React.FormEvent) {
-    event.preventDefault()
-    setIsLoading(true)
-    setError('')
-    setSuccess(false)
+        async function onSubmit(event: React.FormEvent) {
+        event.preventDefault()
+        setIsLoading(true)
+        setError('')
+        setSuccess(false)
 
-    const formData = new FormData(event.target as HTMLFormElement)
-    const question = formData.get('question') as string
-    const description = formData.get('description') as string
-    const category = formData.get('category') as string
+        const formData = new FormData(event.target as HTMLFormElement)
+        const question = formData.get('question') as string
+        const description = formData.get('description') as string
+        const category = formData.get('category') as string
 
-    // Filter out empty options
-    const validOptions = options.filter(option => option.trim() !== '')
+        // Filter out empty options
+        const validOptions = options.filter(option => option.trim() !== '')
 
-    // Validation
-    if (!question.trim()) {
-      setError('Question is required')
-      setIsLoading(false)
-      return
-    }
+        // Validation
+        if (!question.trim()) {
+        setError('Question is required')
+        setIsLoading(false)
+        return
+        }
 
-    if (validOptions.length < 2) {
-      setError('At least 2 options are required')
-      setIsLoading(false)
-      return
-    }
+        if (validOptions.length < 2) {
+        setError('At least 2 options are required')
+        setIsLoading(false)
+        return
+        }
 
-    try {
-      const response = await fetch('/api/polls', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          question: question.trim(),
-          description: description.trim(),
-          options: validOptions,
-          category: category || 'General'
-        }),
-      })
+        try {
+        const response = await fetch('/api/polls', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                question: question.trim(),
+                description: description.trim(),
+                options: validOptions,
+                category: category || 'General'
+                }),
+        })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to create poll')
-      }
+        if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || 'Failed to create poll')
+        }
 
-      const data = await response.json()
-      setSuccess(true)
-      
-      // Redirect to the new poll after a short delay
-      setTimeout(() => {
-        router.push(`/polls/${data.poll.id}`)
-      }, 2000)
+        const data = await response.json()
+        setSuccess(true)
+        
+        // Redirect to the new poll after a short delay
+        setTimeout(() => {
+                router.push(`/polls/${data.poll.id}`)
+        }, 2000)
 
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create poll')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+        } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to create poll')
+        } finally {
+        setIsLoading(false)
+        }
+        }
 
   return (
     <Card>
