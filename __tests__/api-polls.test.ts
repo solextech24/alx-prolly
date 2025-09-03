@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { GET, POST } from '@/app/api/polls/route'
+import { createPoll } from '@/lib/actions/poll-actions'
 
 // Mock the NextResponse module since it's not available in test environment
 jest.mock('next/server', () => ({
@@ -14,6 +15,16 @@ jest.mock('next/server', () => ({
 }))
 
 describe('/api/polls API Routes', () => {
+  beforeEach(async () => {
+    // Ensure we have at least one poll for GET tests
+    await createPoll({
+      question: 'Test Poll',
+      description: 'A test poll for API testing',
+      options: ['Option 1', 'Option 2'],
+      category: 'Test'
+    }, 'user-1')
+  })
+
   describe('GET /api/polls', () => {
     it('should return polls successfully', async () => {
       const response = await GET()
