@@ -72,3 +72,5 @@ prisma/dev.db-journal
 
 # Local development
 .local
+.coderabbit.yaml
+components/forms/As I was studying the documentation mark.md

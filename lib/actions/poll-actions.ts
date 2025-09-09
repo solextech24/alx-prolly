@@ -1,4 +1,4 @@
-import { Poll, CreatePollData, PollResult, PollStats, Vote, User } from '@/lib/types'
+import { Poll, CreatePollData, PollResult, PollStats, Vote, User, DeactivatePollResult } from '@/lib/types'
 
 // Mock data for testing
 const mockUsers: User[] = [
@@ -401,27 +401,42 @@ export async function getPollStats(userId?: string): Promise<PollStats> {
  * Deactivates a poll
  * @param pollId - The poll ID to deactivate
  * @param userId - The user ID requesting deactivation
- * @returns Promise<boolean> - True if deactivated successfully
+ * @returns Promise<DeactivatePollResult> - Result with success/failure and reason
  */
-export async function deactivatePoll(pollId: string, userId: string): Promise<boolean> {
+export async function deactivatePoll(pollId: string, userId: string): Promise<DeactivatePollResult> {
   try {
+    // Validate inputs
+    if (!pollId?.trim()) {
+      return { ok: false, reason: 'not_found', message: 'Poll ID is required' }
+    }
+    
+    if (!userId?.trim()) {
+      return { ok: false, reason: 'forbidden', message: 'User ID is required' }
+    }
+    
     const poll = pollsStore.find(p => p.id === pollId)
     if (!poll) {
-      throw new Error('Poll not found')
+      return { ok: false, reason: 'not_found', message: 'Poll not found' }
     }
     
     // Check if user is the author
     if (poll.authorId !== userId) {
-      throw new Error('Only the poll author can deactivate the poll')
+      return { ok: false, reason: 'forbidden', message: 'Only the poll author can deactivate the poll' }
     }
     
+    // Check if poll is already inactive
+    if (!poll.isActive) {
+      return { ok: false, reason: 'conflict', message: 'Poll is already deactivated' }
+    }
+    
+    // Deactivate the poll
     poll.isActive = false
     poll.updatedAt = new Date()
     
-    return true
+    return { ok: true }
   } catch (error) {
     console.error('Error deactivating poll:', error)
-    return false
+    return { ok: false, reason: 'server_error', message: 'Internal server error occurred while deactivating poll' }
   }
 }
 

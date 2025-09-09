@@ -89,7 +89,7 @@ export default function PollPage({ params }: { params: Promise<{ id: string }> }
         throw new Error(errorData.error || 'Failed to vote')
       }
 
-      const result = await response.json()
+      
       
       // Mark that user has voted and show success
       setHasVoted(true)

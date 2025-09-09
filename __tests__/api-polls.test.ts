@@ -147,15 +147,17 @@ describe('/api/polls API Routes', () => {
 
     it('should generate unique IDs for poll and options', async () => {
       const mockRequest1 = createMockRequest(validPollData)
+      const response1 = await POST(mockRequest1)
+      const data1 = await response1.json()
+      
+      // Wait a small amount to ensure different timestamps
+      await new Promise(resolve => setTimeout(resolve, 10))
+      
       const mockRequest2 = createMockRequest({
         ...validPollData,
         question: 'Different question'
       })
-      
-      const response1 = await POST(mockRequest1)
       const response2 = await POST(mockRequest2)
-      
-      const data1 = await response1.json()
       const data2 = await response2.json()
       
       expect(data1.poll.id).not.toBe(data2.poll.id)

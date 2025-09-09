@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Icons } from '@/components/ui/icons'
+import Link from 'next/link'
 
 interface User {
   id: string
@@ -57,10 +58,10 @@ export function DashboardHeader() {
       </div>
       <div className="flex items-center space-x-2">
         <Button variant="outline" size="sm" asChild>
-          <a href="/polls/create">
+          <Link href="/polls/create">
             <Icons.plus className="mr-2 h-4 w-4" />
             Create Poll
-          </a>
+          </Link>
         </Button>
         
         {user && (
