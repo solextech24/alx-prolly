@@ -197,7 +197,10 @@ export async function POST(request: NextRequest) {
           )
         }
 
-        return NextResponse.json({ poll }, { status: 201 })
+        return NextResponse.json({ 
+          poll,
+          message: 'Poll created successfully' 
+        }, { status: 201 })
       } catch (error) {
         console.error('Error creating poll with mock actions:', error)
         return NextResponse.json(

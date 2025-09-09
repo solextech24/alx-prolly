@@ -29,7 +29,7 @@ export default function LoginPage() {
         <div className="relative z-20 mt-auto">
           <blockquote className="space-y-2">
             <p className="text-lg">
-              "Create polls, gather opinions, and make decisions together."
+              &ldquo;Create polls, gather opinions, and make decisions together.&rdquo;
             </p>
             <footer className="text-sm">Sofia Davis</footer>
           </blockquote>
