@@ -6,10 +6,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Icons } from '@/components/ui/icons'
-import { useSupabase } from '../providers/auth-provider'
+import { supabase } from '@/lib/utils/supabase/client'
 
 export function RegisterForm() {
-  const { supabase } = useSupabase()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)

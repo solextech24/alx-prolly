@@ -1,88 +1,50 @@
 import { NextAuthOptions } from 'next-auth'
-import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
-import { PrismaAdapter } from '@auth/prisma-adapter'
-import { prisma } from '@/lib/db/prisma'
-import bcrypt from 'bcryptjs'
-import { AuthCredentials } from '@/lib/types'
+
+// Fail-fast helper for required environment variables
+function env(name: string): string {
+  const value = process.env[name]
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`)
+  }
+  return value
+}
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  secret: env('NEXTAUTH_SECRET'),
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!
-    }),
-    CredentialsProvider({
-      name: 'credentials',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' }
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null
-        }
-
-        try {
-          const user = await prisma.user.findUnique({
-            where: {
-              email: credentials.email
-            }
-          })
-
-          if (!user || !user.password) {
-            return null
-          }
-
-          const isPasswordValid = await bcrypt.compare(
-            credentials.password,
-            user.password
-          )
-
-          if (!isPasswordValid) {
-            return null
-          }
-
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            image: user.avatar
-          }
-        } catch (error) {
-          console.error('Authentication error:', error)
-          return null
-        }
-      }
+      clientId: env('GOOGLE_CLIENT_ID'),
+      clientSecret: env('GOOGLE_CLIENT_SECRET')
     })
   ],
   session: {
     strategy: 'jwt'
   },
   pages: {
-    signIn: '/login',
-    signUp: '/register'
+    signIn: '/login'
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
+      // Use token.sub as the stable subject identifier when no DB adapter is present
       if (user) {
-        token.id = user.id
-        token.email = user.email
-        token.name = user.name
-        token.image = user.image
+        token.id = token.sub || user.id
+        
+        // Persist Google API tokens if available for future API access
+        if (account?.provider === 'google') {
+          token.access_token = account.access_token
+          token.refresh_token = account.refresh_token
+          token.expires_at = account.expires_at
+        }
       }
       return token
     },
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string
-        session.user.email = token.email as string
-        session.user.name = token.name as string
-        session.user.image = token.image as string
+      if (session.user && token.id) {
+        // Use the stable token.id (which is token.sub) without type assertion
+        session.user.id = token.id
       }
       return session
     }
-  },
-  secret: process.env.NEXTAUTH_SECRET
+  }
 }

@@ -35,7 +35,7 @@ export function LoginForm() {
       } else {
         router.push('/dashboard')
       }
-    } catch (err) {
+    } catch {
       setError('Login failed')
     } finally {
       setIsLoading(false)
@@ -46,7 +46,7 @@ export function LoginForm() {
     setIsLoading(true)
     try {
       await signIn('google', { callbackUrl: '/dashboard' })
-    } catch (error) {
+    } catch {
       setError('Google sign-in failed')
     } finally {
       setIsLoading(false)
@@ -58,7 +58,6 @@ export function LoginForm() {
       <CardHeader>
         <CardTitle>Login</CardTitle>
         <CardDescription>
-          Enter your email and password to access your account
         </CardDescription>
       </CardHeader>
       <CardContent>

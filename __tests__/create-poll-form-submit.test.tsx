@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { useRouter } from 'next/navigation'
-import { CreatePollForm } from './create-poll-form'
+import { CreatePollForm } from '../components/forms/create-poll-form'
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({

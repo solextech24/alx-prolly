@@ -330,7 +330,8 @@ describe('Poll Actions', () => {
 
     it('should fail when poll is inactive', async () => {
       // Deactivate poll first
-      await deactivatePoll(pollId, 'user-1')
+      const deactivateResult = await deactivatePoll(pollId, 'user-1')
+      expect(deactivateResult.ok).toBe(true)
       
       const success = await voteOnPoll(pollId, optionId, 'user-1')
       
@@ -448,27 +449,65 @@ describe('Poll Actions', () => {
     })
 
     it('should deactivate poll successfully when user is author', async () => {
-      const success = await deactivatePoll(pollId, 'user-1')
+      const result = await deactivatePoll(pollId, 'user-1')
       
-      expect(success).toBe(true)
+      expect(result.ok).toBe(true)
       
       const poll = await getPollById(pollId)
       expect(poll!.isActive).toBe(false)
     })
 
     it('should fail when user is not the author', async () => {
-      const success = await deactivatePoll(pollId, 'user-2')
+      const result = await deactivatePoll(pollId, 'user-2')
       
-      expect(success).toBe(false)
+      expect(result.ok).toBe(false)
+      if (!result.ok) {
+        expect(result.reason).toBe('forbidden')
+        expect(result.message).toContain('Only the poll author')
+      }
       
       const poll = await getPollById(pollId)
       expect(poll!.isActive).toBe(true) // Should remain active
     })
 
     it('should fail when poll not found', async () => {
-      const success = await deactivatePoll('nonexistent-poll', 'user-1')
+      const result = await deactivatePoll('nonexistent-poll', 'user-1')
       
-      expect(success).toBe(false)
+      expect(result.ok).toBe(false)
+      if (!result.ok) {
+        expect(result.reason).toBe('not_found')
+        expect(result.message).toContain('Poll not found')
+      }
+    })
+
+    it('should fail when trying to deactivate already deactivated poll', async () => {
+      // First deactivation
+      const firstResult = await deactivatePoll(pollId, 'user-1')
+      expect(firstResult.ok).toBe(true)
+      
+      // Second deactivation should fail with conflict
+      const secondResult = await deactivatePoll(pollId, 'user-1')
+      expect(secondResult.ok).toBe(false)
+      if (!secondResult.ok) {
+        expect(secondResult.reason).toBe('conflict')
+        expect(secondResult.message).toContain('already deactivated')
+      }
+    })
+
+    it('should fail with proper error for invalid inputs', async () => {
+      // Empty poll ID
+      const result1 = await deactivatePoll('', 'user-1')
+      expect(result1.ok).toBe(false)
+      if (!result1.ok) {
+        expect(result1.reason).toBe('not_found')
+      }
+
+      // Empty user ID
+      const result2 = await deactivatePoll(pollId, '')
+      expect(result2.ok).toBe(false)
+      if (!result2.ok) {
+        expect(result2.reason).toBe('forbidden')
+      }
     })
   })
 

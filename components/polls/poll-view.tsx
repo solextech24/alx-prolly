@@ -37,7 +37,7 @@ export function PollView({ pollId }: PollViewProps) {
         const data = await res.json()
         setPoll(data.poll)
       } catch (e: unknown) {
-        if ((e as any)?.name === 'AbortError') return
+        if (e instanceof Error && e.name === 'AbortError') return
         setError(e instanceof Error ? e.message : 'Failed to fetch poll')
       } finally {
         setLoading(false)

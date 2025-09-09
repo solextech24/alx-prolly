@@ -104,3 +104,11 @@ export interface RegisterData extends AuthCredentials {
   name: string
   confirmPassword: string
 }
+
+// Discriminated union for deactivatePoll result
+export type DeactivatePollResult = 
+  | { ok: true }
+  | { ok: false; reason: 'forbidden'; message?: string }
+  | { ok: false; reason: 'not_found'; message?: string }
+  | { ok: false; reason: 'conflict'; message?: string }
+  | { ok: false; reason: 'server_error'; message?: string }
