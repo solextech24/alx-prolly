@@ -1,26 +1,19 @@
-As I was studying the documentation markdown files from different repositories, I caught myself to copy-paste some code to a javascript or a typescript file or directly to the browser's dev console or starting a node.js repl. So I thought that it would very convenient to just hit a button and play with the code that I am studying.
+While studying documentation across repositories, I often copied code into a JavaScript or TypeScript file, the browser console, or a Node.js REPL. It would be more convenient to press a button and immediately run the code I’m reading.
 
-So, now users JavaScript Repl extension can start a repl session in a markdown file and evaluate code expressions that are contained inside JavaScript, TypeScript, or CoffeeScript block codes.
+With the JavaScript REPL extension, you can start a REPL session inside a Markdown file and evaluate code in JavaScript, TypeScript, or CoffeeScript code blocks.
 
 ```javascript
 console.log("We ♡ JavaScript!");
 ```
 
-## Playground for MDN Web Docs and not only
+## Playground for MDN Web Docs (and more)
 
-All the times that I have visited the MDN web docs, I always remembered an upcoming feature that I had somewhere in my notes and I would like to support. Although in some of the examples of MDN web you can edit and run the code and see the result this is not happening to most of them and I think that the experience to run these examples through the extension is superior. Users can now browse the MDN Web Docs as markdown files with preview or not and play with code through the extension. You can run the command `JS Repl: Docs` to test it and practice. Users can also practice with the official Typescript, CoffeeScript, Node.js, lodash, RxJS, and Ramda documentation. [Learn more](https://github.com/axilleasiv/vscode-javascript-repl-docs/wiki/Playground-for-MDN-Web)
+MDN often provides live editors, but many examples are static. Running those examples through this extension can be more convenient. You can browse MDN Web Docs in Markdown (with or without preview) and execute examples via the extension. Run the command `JS Repl: Docs` to try it. You can also practice with official TypeScript, CoffeeScript, Node.js, Lodash, RxJS, and Ramda docs. [Learn more](https://github.com/axilleasiv/vscode-javascript-repl-docs/wiki/Playground-for-MDN-Web)
 
 
 ## Description
-Users can create code blocks that could be evaluated by repl extension by placing triple backticks ``` before and after the code block. Usually in most repositories the markdown files in order to have syntax highlighting there is the language identifier after the third backtick, and there is no empty space between the backtick and the language identifier.
+Create evaluable code blocks by wrapping code with triple backticks. For syntax highlighting in Markdown, add a language identifier immediately after the opening backticks (no space).
 
-\`\`\`javascript
-
-users' code block
-
-\`\`\`
-
-The language identifier is mandatory for the extension in order to evaluate a code block. The language identifiers that are recognized and supported are the following:
 
 - javascript
 - js
@@ -38,14 +31,12 @@ The extension evaluates only one language per time or keystroke and this is the 
 
 So users can have in the same markdown file javascript, typescript of CoffeeScript code blocks that could be evaluated but only one language per time.
 
+You can use all REPL features, including `require`/`import` of workspace files and installed `node_modules` resolved relative to the Markdown file. Security note: running code from documentation executes locally with your user permissions. Only run code you trust.
+Only one block is active at a time: the block containing the cursor. If multiple blocks are in the viewport, activation follows the cursor position. When the file contains multiple languages, the active language is the one of the active block.
+
+Evaluation triggers on edits to the active block (debounced). Mixed-language files are supported, but only one language is evaluated at a time.
+
 Finally, the users can normally use all the available features of the repl extension for example they can `require` and `import` files or `node_modules` relative to the markdown file path.
-
-
-### Examples in JavaScript
-
-If a block is not active when the users make the first change then is activated and the extension starts the evaluation.
-```js
-// Try to edit this comment
 const obj = {
   language: 'javascript'
 }; //=
@@ -113,8 +104,7 @@ The settings that we have used `repl-`,  `repl--`, `repl+`,  `repl++` and `repl!
 Depending on the case maybe it is not convenient to change this every time per code block, so users can add the following comment `<!-- repl* -->` at the first line of the markdown file.
 
 ### Examples in TypeScript
-If TypeScript is not installed at the current root folder of the workspace, the latest version of TypeScript will downloaded and installed internally.
-
+If TypeScript is not installed in the workspace, the extension prompts to install a pinned version (configurable), downloads it on consent, and caches it. You can change or pin the version in settings to avoid unexpected upgrades.
 ```typescript
 // Try to edit this comment
 function classDecorator<T extends { new (...args: any[]): {} }>(
@@ -168,8 +158,7 @@ function enumerable(value: boolean) {
 ```
 
 ### Examples in CoffeeScript
-If CoffeeScript is not installed at the current root folder of the workspace, the latest version of CoffeeScript will downloaded and installed internally.
-
+ If CoffeeScript is not present, the extension prompts to install a pinned version and caches it. (Avoid auto-installing “latest” without consent.)
 ```coffee
 fibonacci = ->
   [previous, current] = [1, 1]
