@@ -8,33 +8,92 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Icons } from '@/components/ui/icons'
 import Link from 'next/link'
 
+/**
+ * User interface representing the current authenticated user.
+ * This interface defines the structure of user data displayed in the dashboard header.
+ */
 interface User {
+  /** Unique user identifier */
   id: string
+  /** User's email address */
   email: string
+  /** User's display name */
   name: string
+  /** Optional user avatar/profile image URL */
   avatar?: string | null
 }
 
+/**
+ * Dashboard Header Component
+ * 
+ * This component renders the main header for the dashboard interface, providing
+ * user context, navigation options, and quick actions. It manages user session
+ * state and provides logout functionality.
+ * 
+ * Key Features:
+ * - Personalized greeting with user's name
+ * - User avatar and profile dropdown menu
+ * - Quick access to poll creation
+ * - Logout functionality with state cleanup
+ * - Loading states for better UX
+ * - Responsive design with proper spacing
+ * 
+ * User Experience:
+ * - Shows loading skeleton while fetching user data
+ * - Gracefully handles missing user information
+ * - Provides clear visual feedback for all interactions
+ * - Maintains consistent styling with the design system
+ * 
+ * Demo Mode:
+ * Currently uses localStorage for demo user management.
+ * In production, this should integrate with actual authentication.
+ * 
+ * @returns JSX.Element - The dashboard header with user context and actions
+ * 
+ * @example
+ * ```tsx
+ * // Usage in dashboard layout
+ * <DashboardHeader />
+ * ```
+ */
 export function DashboardHeader() {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
+    /**
+     * Load user data from localStorage (demo implementation).
+     * In production, this should fetch from secure session storage
+     * or make an API call to get current user data.
+     */
     // Get demo user from localStorage
     const demoUser = localStorage.getItem('demo-user')
     if (demoUser) {
-      setUser(JSON.parse(demoUser))
+      try {
+        setUser(JSON.parse(demoUser))
+      } catch (error) {
+        // Handle corrupted localStorage data
+        console.error('Invalid demo user data:', error)
+        localStorage.removeItem('demo-user')
+      }
     }
     setIsLoading(false)
   }, [])
 
+  /**
+   * Handles user logout by clearing session data and redirecting.
+   * This function ensures complete cleanup of user state and
+   * redirects to the public polls page.
+   */
   const handleLogout = () => {
     localStorage.removeItem('demo-user')
     setUser(null)
-    router.push('/polls')
+    router.push('/polls')  // Redirect to public polls page
   }
 
+  // Show loading skeleton while user data is being fetched
+  // This prevents layout shift and provides visual feedback
   if (isLoading) {
     return (
       <div className="flex items-center justify-between space-y-2">
@@ -48,6 +107,7 @@ export function DashboardHeader() {
 
   return (
     <div className="flex items-center justify-between space-y-2">
+      {/* Welcome section with personalized greeting */}
       <div>
         <h2 className="text-2xl font-bold tracking-tight">
           Welcome back, {user?.name || 'User'}!
@@ -56,7 +116,10 @@ export function DashboardHeader() {
           Here&apos;s what&apos;s happening with your polls today.
         </p>
       </div>
+      
+      {/* Action buttons and user menu */}
       <div className="flex items-center space-x-2">
+        {/* Quick action button for poll creation */}
         <Button variant="outline" size="sm" asChild>
           <Link href="/polls/create">
             <Icons.plus className="mr-2 h-4 w-4" />
@@ -64,6 +127,7 @@ export function DashboardHeader() {
           </Link>
         </Button>
         
+        {/* User avatar and dropdown menu (only shown when user is loaded) */}
         {user && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -75,6 +139,7 @@ export function DashboardHeader() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
+              {/* User information display */}
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">{user.name}</p>
@@ -84,6 +149,8 @@ export function DashboardHeader() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              
+              {/* Navigation menu items */}
               <DropdownMenuItem>
                 <Icons.user className="mr-2 h-4 w-4" />
                 <span>Profile</span>
@@ -93,6 +160,8 @@ export function DashboardHeader() {
                 <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              
+              {/* Logout action */}
               <DropdownMenuItem onClick={handleLogout}>
                 <Icons.logOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>

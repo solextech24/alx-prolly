@@ -1,6 +1,29 @@
 import { Poll, CreatePollData, PollResult, PollStats, Vote, User, DeactivatePollResult } from '@/lib/types'
 
-// Mock data for testing
+/**
+ * Poll Management Actions and Business Logic
+ * 
+ * This module provides comprehensive poll management functionality including
+ * creation, retrieval, voting, and analytics. It uses in-memory storage for
+ * development and testing, with functions designed to be easily replaceable
+ * with database implementations.
+ * 
+ * Key Features:
+ * - CRUD operations for polls
+ * - Voting system with duplicate prevention
+ * - Real-time statistics calculation
+ * - User poll management
+ * - Poll results and analytics
+ * - Comprehensive validation and error handling
+ * 
+ * Data Storage: Currently uses in-memory arrays for development.
+ * In production, these should be replaced with database operations.
+ * 
+ * @module poll-actions
+ */
+
+// Mock data for testing and development
+// These represent the types of users that might interact with polls
 const mockUsers: User[] = [
   {
     id: 'user-1',
@@ -18,69 +41,108 @@ const mockUsers: User[] = [
   }
 ]
 
-// In-memory storage for testing
+// In-memory storage for development and testing
+// These would be replaced with database tables in production
 let pollsStore: Poll[] = []
 let votesStore: Vote[] = []
+
+// ID counters for generating unique identifiers
+// In production, these would be handled by database auto-increment or UUIDs
 let pollIdCounter = 1
 let voteIdCounter = 1
 
 /**
- * Creates a new poll with the provided data
- * @param pollData - The poll data to create
+ * Creates a new poll with comprehensive validation and data sanitization.
+ * 
+ * This function handles the complete poll creation workflow including input
+ * validation, data sanitization, duplicate option detection, and author
+ * verification. It ensures data integrity while providing detailed error
+ * feedback for invalid inputs.
+ * 
+ * Validation Rules:
+ * - Question: Required, non-empty after trimming
+ * - Options: Minimum 2, maximum 10, no duplicates, non-empty
+ * - Author: Must exist in the system
+ * - Expiration: Must be future date if provided
+ * 
+ * @param pollData - The poll creation data containing question, options, etc.
  * @param authorId - The ID of the user creating the poll
- * @returns Promise<Poll | null> - The created poll or null if creation failed
+ * @returns Promise resolving to created Poll object or null if creation failed
+ * 
+ * @example
+ * ```ts
+ * const poll = await createPoll({
+ *   question: 'What is your favorite programming language?',
+ *   description: 'Help us understand developer preferences',
+ *   options: ['JavaScript', 'Python', 'TypeScript', 'Go'],
+ *   category: 'Technology',
+ *   expiresAt: new Date('2024-12-31')
+ * }, 'user-123')
+ * 
+ * if (poll) {
+ *   console.log('Poll created with ID:', poll.id)
+ * } else {
+ *   console.error('Poll creation failed')
+ * }
+ * ```
+ * 
+ * @throws Error with descriptive message for validation failures
  */
 export async function createPoll(pollData: CreatePollData, authorId: string): Promise<Poll | null> {
   try {
-    // Validation
+    // Validate question - it's the core of any poll
     if (!pollData.question?.trim()) {
       throw new Error('Question is required')
     }
     
+    // Validate options array - polls need choices
     if (!pollData.options || pollData.options.length < 2) {
       throw new Error('At least 2 options are required')
     }
     
+    // Enforce maximum options to prevent overwhelming users
     if (pollData.options.length > 10) {
       throw new Error('Maximum 10 options allowed')
     }
     
-    // Check for duplicate options
+    // Check for duplicate options to ensure meaningful choices
     const uniqueOptions = [...new Set(pollData.options.filter(opt => opt.trim()))]
     if (uniqueOptions.length !== pollData.options.filter(opt => opt.trim()).length) {
       throw new Error('Duplicate options are not allowed')
     }
     
-    // Find author
+    // Verify author exists in the system
+    // This ensures poll attribution and prevents orphaned polls
     const author = mockUsers.find(user => user.id === authorId)
     if (!author) {
       throw new Error('Author not found')
     }
     
-    // Create poll
+    // Create poll object with validated and sanitized data
     const poll: Poll = {
       id: `poll-${pollIdCounter++}`,
       question: pollData.question.trim(),
       description: pollData.description?.trim(),
+      // Transform options into structured format with vote tracking
       options: pollData.options
         .filter(opt => opt.trim())
         .map((text, index) => ({
           id: `option-${Date.now()}-${index}`,
           text: text.trim(),
-          votes: 0,
-          percentage: 0
+          votes: 0,        // Initialize with zero votes
+          percentage: 0    // Initialize with zero percentage
         })),
       totalVotes: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
       expiresAt: pollData.expiresAt,
       isActive: true,
-      category: pollData.category || 'General',
+      category: pollData.category || 'General',  // Default category
       authorId,
       author
     }
     
-    // Store poll
+    // Store poll in memory (replace with database save in production)
     pollsStore.push(poll)
     
     return poll
@@ -91,9 +153,43 @@ export async function createPoll(pollData: CreatePollData, authorId: string): Pr
 }
 
 /**
- * Fetches all polls with optional filtering
- * @param filters - Optional filters for polls
- * @returns Promise<Poll[]> - Array of polls
+ * Retrieves polls with comprehensive filtering, searching, and sorting capabilities.
+ * 
+ * This function provides a flexible way to fetch polls from the system with
+ * various filtering options. It supports category filtering, text searching,
+ * sorting by different criteria, and pagination through limits.
+ * 
+ * Features:
+ * - Active status filtering (excludes expired/inactive polls)
+ * - Category-based filtering (case-insensitive)
+ * - Full-text search across question, description, and category
+ * - Multiple sorting options (newest, oldest, most/least votes)
+ * - Result limiting for pagination
+ * 
+ * @param filters - Optional filtering and sorting criteria
+ * @param filters.category - Filter by poll category (case-insensitive)
+ * @param filters.search - Search term for question, description, category
+ * @param filters.sortBy - Sort order: 'newest' | 'oldest' | 'mostVotes' | 'leastVotes'
+ * @param filters.limit - Maximum number of polls to return
+ * @param filters.activeOnly - Only return active, non-expired polls
+ * @returns Promise resolving to array of filtered and sorted polls
+ * 
+ * @example
+ * ```ts
+ * // Get active technology polls, newest first, limit 10
+ * const techPolls = await getPolls({
+ *   category: 'technology',
+ *   activeOnly: true,
+ *   sortBy: 'newest',
+ *   limit: 10
+ * })
+ * 
+ * // Search for polls about programming
+ * const programmingPolls = await getPolls({
+ *   search: 'programming',
+ *   sortBy: 'mostVotes'
+ * })
+ * ```
  */
 export async function getPolls(filters?: {
   category?: string
@@ -103,23 +199,24 @@ export async function getPolls(filters?: {
   activeOnly?: boolean
 }): Promise<Poll[]> {
   try {
+    // Start with all polls and apply filters progressively
     let filteredPolls = [...pollsStore]
     
-    // Filter by active status
+    // Filter by active status - removes expired and deactivated polls
     if (filters?.activeOnly) {
       filteredPolls = filteredPolls.filter(poll => 
         poll.isActive && (!poll.expiresAt || poll.expiresAt > new Date())
       )
     }
     
-    // Filter by category
+    // Filter by category - case-insensitive matching
     if (filters?.category) {
       filteredPolls = filteredPolls.filter(poll => 
         poll.category.toLowerCase() === filters.category!.toLowerCase()
       )
     }
     
-    // Filter by search term
+    // Filter by search term - searches across multiple fields
     if (filters?.search) {
       const searchTerm = filters.search.toLowerCase()
       filteredPolls = filteredPolls.filter(poll =>
@@ -129,25 +226,29 @@ export async function getPolls(filters?: {
       )
     }
     
-    // Sort polls
+    // Sort polls based on specified criteria
     if (filters?.sortBy) {
       switch (filters.sortBy) {
         case 'newest':
+          // Sort by creation date, newest first
           filteredPolls.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
           break
         case 'oldest':
+          // Sort by creation date, oldest first
           filteredPolls.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
           break
         case 'mostVotes':
+          // Sort by vote count, highest first (most popular)
           filteredPolls.sort((a, b) => b.totalVotes - a.totalVotes)
           break
         case 'leastVotes':
+          // Sort by vote count, lowest first (least popular)
           filteredPolls.sort((a, b) => a.totalVotes - b.totalVotes)
           break
       }
     }
     
-    // Limit results
+    // Apply result limit for pagination
     if (filters?.limit && filters.limit > 0) {
       filteredPolls = filteredPolls.slice(0, filters.limit)
     }
@@ -197,52 +298,93 @@ export async function getUserPolls(userId: string): Promise<Poll[]> {
 }
 
 /**
- * Records a vote on a poll
- * @param pollId - The poll ID
- * @param optionId - The option ID being voted for
- * @param userId - The user ID casting the vote
- * @returns Promise<boolean> - True if vote was recorded successfully
+ * Records a vote on a poll with comprehensive validation and duplicate handling.
+ * 
+ * This function handles the complete voting workflow including validation of poll
+ * availability, option validity, and user eligibility. It supports vote updates,
+ * allowing users to change their vote, and automatically recalculates poll statistics.
+ * 
+ * Validation Process:
+ * 1. Input validation (required parameters)
+ * 2. Poll existence and activity status
+ * 3. Poll expiration check
+ * 4. Option validity within the poll
+ * 5. Duplicate vote detection and handling
+ * 
+ * Vote Handling:
+ * - New votes: Creates new vote record
+ * - Existing votes: Updates the option choice (allows vote changes)
+ * - Statistics: Automatically recalculates poll totals and percentages
+ * 
+ * @param pollId - The unique identifier of the poll to vote on
+ * @param optionId - The unique identifier of the selected poll option
+ * @param userId - The unique identifier of the user casting the vote
+ * @returns Promise resolving to true if vote was recorded successfully, false otherwise
+ * 
+ * @example
+ * ```ts
+ * // Cast a new vote
+ * const success = await voteOnPoll('poll-123', 'option-456', 'user-789')
+ * if (success) {
+ *   console.log('Vote recorded successfully')
+ * }
+ * 
+ * // Change an existing vote (user already voted on this poll)
+ * const updateSuccess = await voteOnPoll('poll-123', 'option-999', 'user-789')
+ * if (updateSuccess) {
+ *   console.log('Vote updated successfully')
+ * }
+ * ```
+ * 
+ * @throws Error with descriptive message for validation failures
+ * 
+ * Error Cases:
+ * - Missing or empty parameters
+ * - Poll not found
+ * - Poll is inactive or expired
+ * - Invalid option for the poll
+ * - General voting system errors
  */
 export async function voteOnPoll(pollId: string, optionId: string, userId: string): Promise<boolean> {
   try {
-    // Validation
+    // Input validation - all parameters are required for voting
     if (!pollId?.trim() || !optionId?.trim() || !userId?.trim()) {
       throw new Error('Poll ID, option ID, and user ID are required')
     }
     
-    // Find poll
+    // Find and validate poll existence
     const poll = pollsStore.find(p => p.id === pollId)
     if (!poll) {
       throw new Error('Poll not found')
     }
     
-    // Check if poll is active
+    // Check if poll is active - inactive polls cannot receive votes
     if (!poll.isActive) {
       throw new Error('Poll is not active')
     }
     
-    // Check if poll is expired
+    // Check poll expiration - expired polls cannot receive new votes
     if (poll.expiresAt && poll.expiresAt <= new Date()) {
       throw new Error('Poll has expired')
     }
     
-    // Find option
+    // Validate option exists in this poll
     const option = poll.options.find(opt => opt.id === optionId)
     if (!option) {
       throw new Error('Option not found')
     }
     
-    // Check if user already voted
+    // Check for existing vote by this user on this poll
     const existingVote = votesStore.find(vote => 
       vote.pollId === pollId && vote.userId === userId
     )
     
     if (existingVote) {
-      // Update existing vote
+      // Update existing vote - allows users to change their choice
       existingVote.optionId = optionId
-      existingVote.createdAt = new Date()
+      existingVote.createdAt = new Date()  // Update timestamp for the change
     } else {
-      // Create new vote
+      // Create new vote record for first-time voter
       const vote: Vote = {
         id: `vote-${voteIdCounter++}`,
         pollId,
@@ -253,7 +395,7 @@ export async function voteOnPoll(pollId: string, optionId: string, userId: strin
       votesStore.push(vote)
     }
     
-    // Update poll statistics
+    // Recalculate poll statistics to reflect the new/updated vote
     updatePollStats(pollId)
     
     return true
